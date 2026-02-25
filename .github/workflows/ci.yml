@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  BORINGCACHE_API_TOKEN: ${{ secrets.BORINGCACHE_API_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: boringcache/nodejs-action@v1
+        with:
+          node-version: '22'
+          workspace: boringcache/actions
+
+      - run: npm install
+      - run: npm run build
+      - run: npm test
+
+  test:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: boringcache/nodejs-action@v1
+        with:
+          node-version: '22'
+          workspace: boringcache/actions
+      - run: npm install
+      - run: npm run build
+
+      - name: Setup Elixir
+        id: elixir
+        uses: ./
+        with:
+          workspace: boringcache/actions
+          elixir-version: '1.17'
+          erlang-version: '27'
+
+      - name: Verify installation
+        run: |
+          set -euo pipefail
+          elixir --version
+          erl -noshell -eval 'io:fwrite("~s~n", [erlang:system_info(otp_release)]), halt().'
+          echo "elixir-version: ${{ steps.elixir.outputs.elixir-version }}"
+          echo "erlang-version: ${{ steps.elixir.outputs.erlang-version }}"
+          echo "cache-hit: ${{ steps.elixir.outputs.cache-hit }}"
+
+      - name: Create and build test project
+        run: |
+          set -euo pipefail
+          mix new test_project
+          cd test_project
+          mix deps.get
+          mix compile
+          mix test
+
+  test-versions:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - elixir: '1.16'
+            erlang: '26'
+          - elixir: '1.17'
+            erlang: '27'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: boringcache/nodejs-action@v1
+        with:
+          node-version: '22'
+          workspace: boringcache/actions
+      - run: npm install
+      - run: npm run build
+
+      - name: Setup Elixir ${{ matrix.elixir }} + OTP ${{ matrix.erlang }}
+        id: elixir
+        uses: ./
+        with:
+          workspace: boringcache/actions
+          elixir-version: ${{ matrix.elixir }}
+          erlang-version: ${{ matrix.erlang }}
+
+      - name: Verify versions
+        run: |
+          set -euo pipefail
+          elixir --version
+          echo "Elixir: ${{ steps.elixir.outputs.elixir-version }}"
+          echo "Erlang: ${{ steps.elixir.outputs.erlang-version }}"

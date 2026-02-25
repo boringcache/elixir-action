@@ -1,0 +1,73 @@
+name: 'BoringCache Elixir'
+description: 'Cache once. Reuse everywhere. Setup Elixir + Erlang via mise and cache deps + build artifacts with BoringCache.'
+author: 'BoringCache'
+
+branding:
+  icon: 'package'
+  color: 'blue'
+
+inputs:
+  cli-version:
+    description: 'BoringCache CLI version (e.g., v1.0.0). Set to "skip" to disable automatic CLI setup.'
+    required: false
+    default: 'v1.8.0'
+  workspace:
+    description: 'BoringCache workspace (e.g., "my-workspace" or "org/workspace")'
+    required: false
+  cache-tag:
+    description: 'Cache tag prefix for BoringCache. Defaults to repository name.'
+    required: false
+    default: ''
+  elixir-version:
+    description: 'Elixir version to install via mise. Auto-detected from .tool-versions if not specified.'
+    required: false
+  erlang-version:
+    description: 'Erlang/OTP version to install via mise. Auto-detected from .tool-versions if not specified.'
+    required: false
+  working-directory:
+    description: 'Working directory for the project'
+    required: false
+    default: '.'
+  cache-elixir:
+    description: 'Cache Elixir + Erlang installation from mise'
+    required: false
+    default: 'true'
+  cache-deps:
+    description: 'Cache Mix deps directory'
+    required: false
+    default: 'true'
+  cache-build:
+    description: 'Cache Mix _build directory'
+    required: false
+    default: 'true'
+  verbose:
+    description: 'Enable verbose CLI output for debugging'
+    required: false
+    default: 'false'
+  exclude:
+    description: 'Glob pattern to exclude files from cache digest'
+    required: false
+  save-always:
+    description: 'Save cache even if the job fails'
+    required: false
+    default: 'false'
+
+outputs:
+  workspace:
+    description: 'Resolved workspace name'
+  elixir-version:
+    description: 'Installed Elixir version'
+  erlang-version:
+    description: 'Installed Erlang version'
+  cache-tag:
+    description: 'Cache tag prefix used'
+  cache-hit:
+    description: 'Whether any cache was restored'
+  elixir-cache-hit:
+    description: 'Whether the Elixir/Erlang installation cache was restored'
+
+runs:
+  using: 'node24'
+  main: 'dist/restore/index.js'
+  post: 'dist/save/index.js'
+  post-if: "success() || inputs.save-always == 'true'"

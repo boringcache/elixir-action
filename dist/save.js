@@ -1,0 +1,97 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(require("@actions/core"));
+const utils_1 = require("./utils");
+async function run() {
+    try {
+        const workspace = core.getInput('workspace') || core.getState('workspace');
+        const cacheElixir = core.getInput('cache-elixir') !== 'false' && core.getState('cacheElixir') !== 'false';
+        const cacheDeps = core.getInput('cache-deps') !== 'false' && core.getState('cacheDeps') !== 'false';
+        const cacheBuild = core.getInput('cache-build') !== 'false' && core.getState('cacheBuild') !== 'false';
+        const verbose = core.getState('verbose') === 'true';
+        const exclude = core.getInput('exclude');
+        const elixirVersion = core.getState('elixirVersion');
+        const erlangVersion = core.getState('erlangVersion');
+        const cacheTagPrefix = core.getState('cacheTagPrefix');
+        if (!workspace) {
+            core.info('No workspace found, skipping save');
+            return;
+        }
+        core.info('Saving to BoringCache...');
+        if (cacheElixir && elixirVersion && erlangVersion && cacheTagPrefix) {
+            const miseDataDir = (0, utils_1.getMiseDataDir)();
+            const runtimeTag = `${cacheTagPrefix}-elixir-${elixirVersion}-otp-${erlangVersion}`;
+            core.info(`Saving Elixir + Erlang installation [${runtimeTag}]...`);
+            const args = ['save', workspace, `${runtimeTag}:${miseDataDir}`];
+            if (verbose)
+                args.push('--verbose');
+            await (0, utils_1.execBoringCache)(args);
+        }
+        if (cacheDeps) {
+            const depsTag = core.getState('depsTag');
+            const depsDir = core.getState('depsDir');
+            if (depsTag && depsDir) {
+                core.info(`Saving Mix deps [${depsTag}]...`);
+                const args = ['save', workspace, `${depsTag}:${depsDir}`];
+                if (verbose)
+                    args.push('--verbose');
+                if (exclude)
+                    args.push('--exclude', exclude);
+                await (0, utils_1.execBoringCache)(args);
+            }
+        }
+        if (cacheBuild) {
+            const buildTag = core.getState('buildTag');
+            const buildDir = core.getState('buildDir');
+            if (buildTag && buildDir) {
+                core.info(`Saving Mix _build [${buildTag}]...`);
+                const args = ['save', workspace, `${buildTag}:${buildDir}`];
+                if (verbose)
+                    args.push('--verbose');
+                if (exclude)
+                    args.push('--exclude', exclude);
+                await (0, utils_1.execBoringCache)(args);
+            }
+        }
+        core.info('Save complete');
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            core.warning(`Save failed: ${error.message}`);
+        }
+    }
+}
+run();
