@@ -17097,8 +17097,8 @@ Minimatch.prototype._matchGlobstar = function (file, pattern, partial, fileIndex
   }
 
   var head = pattern.slice(patternIndex, firstgs)
-  var body = pattern.slice(firstgs + 1, lastgs)
-  var tail = pattern.slice(lastgs + 1)
+  var body = partial ? pattern.slice(firstgs + 1) : pattern.slice(firstgs + 1, lastgs)
+  var tail = partial ? [] : pattern.slice(lastgs + 1)
 
   // check the head
   if (head.length) {
@@ -17142,7 +17142,7 @@ Minimatch.prototype._matchGlobstar = function (file, pattern, partial, fileIndex
         return false
       }
     }
-    return sawSome
+    return partial || sawSome
   }
 
   // split body into segments at each GLOBSTAR
@@ -17222,7 +17222,7 @@ Minimatch.prototype._matchGlobStarBodySections = function (
     }
     fileIndex++
   }
-  return null
+  return partial || null
 }
 
 Minimatch.prototype._matchOne = function (file, pattern, partial, fileIndex, patternIndex) {
