@@ -78,7 +78,7 @@ describe('Elixir restore/save round-trip', () => {
   it('full round-trip: installs Erlang + Elixir, caches runtime + deps + _build', async () => {
     (core.getInput as jest.Mock).mockImplementation((name: string) => {
       const inputs: Record<string, string> = {
-        'cli-version': 'v1.10.2',
+        'cli-version': 'v1.10.5',
         'workspace': 'myorg/myproject',
         'cache-tag': '',
         'elixir-version': '1.17',
@@ -97,7 +97,7 @@ describe('Elixir restore/save round-trip', () => {
     });
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    expect(ensureBoringCache).toHaveBeenCalledWith({ version: 'v1.10.2' });
+    expect(ensureBoringCache).toHaveBeenCalledWith({ version: 'v1.10.5' });
 
     expect(execBoringCache).toHaveBeenCalledWith(
       expect.arrayContaining(['restore', 'myorg/myproject', expect.stringContaining('elixir-1.17-otp-27')]),
