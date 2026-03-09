@@ -1,6 +1,6 @@
 {
   "name": "boringcache-elixir",
-  "version": "1.9.11",
+  "version": "1.11.0",
   "description": "Setup Elixir + Erlang via mise and cache deps + build artifacts with BoringCache.",
   "main": "dist/restore/index.js",
   "scripts": {
