@@ -50,7 +50,7 @@ The runtime cache is version-specific (Elixir + OTP combo). Dependencies are sha
 
 | Input | Default | Description |
 |-------|---------|-------------|
-| `cli-version` | `v1.11.0` | BoringCache CLI version. Set to `skip` to disable automatic setup. |
+| `cli-version` | `v1.12.0` | BoringCache CLI version. Set to `skip` to disable automatic setup. |
 | `workspace` | | BoringCache workspace (e.g., `my-org/my-project`). |
 | `cache-tag` | repo name | Cache tag prefix. |
 | `elixir-version` | `1.18` | Elixir version. Auto-detected from `.tool-versions` or `mix.exs`. |
