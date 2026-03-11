@@ -19,11 +19,23 @@ inputs:
     required: false
     default: ''
   elixir-version:
-    description: 'Elixir version to install via mise. Auto-detected from .tool-versions if not specified.'
+    description: 'Elixir version to install via mise. Auto-detected from .elixir-version, .tool-versions, or mise.toml if not specified.'
     required: false
   erlang-version:
-    description: 'Erlang/OTP version to install via mise. Auto-detected from .tool-versions if not specified.'
+    description: 'Erlang/OTP version to install via mise. Auto-detected from .tool-versions or mise.toml if not specified.'
     required: false
+  install-hex:
+    description: 'Install Hex package manager'
+    required: false
+    default: 'true'
+  install-rebar:
+    description: 'Install rebar3'
+    required: false
+    default: 'true'
+  hexpm-mirrors:
+    description: 'Hex.pm mirror URL'
+    required: false
+    default: ''
   working-directory:
     description: 'Working directory for the project'
     required: false

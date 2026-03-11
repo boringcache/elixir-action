@@ -45,6 +45,9 @@ exports.installElixir = installElixir;
 exports.activateElixir = activateElixir;
 exports.installErlang = installErlang;
 exports.activateErlang = activateErlang;
+exports.installHex = installHex;
+exports.installRebar3 = installRebar3;
+exports.configureHexMirror = configureHexMirror;
 exports.getElixirVersion = getElixirVersion;
 exports.getErlangVersion = getErlangVersion;
 const core = __importStar(require("@actions/core"));
@@ -156,6 +159,34 @@ async function activateErlang(version) {
     const misePath = getMiseBinPath();
     await exec.exec(misePath, ['use', '-g', `erlang@${version}`]);
 }
+async function installHex() {
+    core.info('Installing Hex...');
+    await exec.exec('mix', ['local.hex', '--force']);
+}
+async function installRebar3() {
+    core.info('Installing rebar3...');
+    await exec.exec('mix', ['local.rebar', '--force']);
+}
+async function configureHexMirror(mirror) {
+    if (!mirror)
+        return;
+    core.exportVariable('HEX_MIRROR_URL', mirror.trim());
+    core.info(`Hex mirror: ${mirror.trim()}`);
+}
+async function readMiseTomlVersion(workingDir, toolName) {
+    const miseToml = path.join(workingDir, 'mise.toml');
+    try {
+        const content = await fs.promises.readFile(miseToml, 'utf-8');
+        const toolsMatch = content.match(/\[tools\]([\s\S]*?)(?:\n\[|$)/);
+        if (toolsMatch) {
+            const versionMatch = toolsMatch[1].match(new RegExp(`^\\s*${toolName}\\s*=\\s*["']([^"']+)["']`, 'm'));
+            if (versionMatch)
+                return versionMatch[1];
+        }
+    }
+    catch { }
+    return null;
+}
 async function getElixirVersion(inputVersion, workingDir) {
     if (inputVersion) {
         return inputVersion;
@@ -177,6 +208,9 @@ async function getElixirVersion(inputVersion, workingDir) {
         }
     }
     catch { }
+    const miseVersion = await readMiseTomlVersion(workingDir, 'elixir');
+    if (miseVersion)
+        return miseVersion;
     const mixExs = path.join(workingDir, 'mix.exs');
     try {
         const content = await fs.promises.readFile(mixExs, 'utf-8');
@@ -201,5 +235,8 @@ async function getErlangVersion(inputVersion, workingDir) {
         }
     }
     catch { }
+    const miseVersion = await readMiseTomlVersion(workingDir, 'erlang');
+    if (miseVersion)
+        return miseVersion;
     return '27';
 }

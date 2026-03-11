@@ -13,6 +13,9 @@ import {
   activateElixir,
   installErlang,
   activateErlang,
+  installHex,
+  installRebar3,
+  configureHexMirror,
   wasCacheHit,
 } from './utils';
 
@@ -27,6 +30,9 @@ async function run(): Promise<void> {
     const cacheDeps = core.getInput('cache-deps') !== 'false';
     const cacheBuild = core.getInput('cache-build') !== 'false';
     const verbose = core.getInput('verbose') === 'true';
+    const installHexInput = core.getInput('install-hex') !== 'false';
+    const installRebarInput = core.getInput('install-rebar') !== 'false';
+    const hexpmMirrors = core.getInput('hexpm-mirrors') || '';
     const cliVersion = core.getInput('cli-version');
 
     const elixirVersion = await getElixirVersion(inputElixirVersion, workingDir);
@@ -67,6 +73,16 @@ async function run(): Promise<void> {
     } else {
       await installErlang(erlangVersion);
       await installElixir(elixirVersion);
+    }
+
+    if (hexpmMirrors) {
+      await configureHexMirror(hexpmMirrors);
+    }
+    if (installHexInput) {
+      await installHex();
+    }
+    if (installRebarInput) {
+      await installRebar3();
     }
 
     const depsTag = `${cacheTagPrefix}-elixir-deps`;

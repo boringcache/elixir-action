@@ -140,6 +140,37 @@ export async function activateErlang(version: string): Promise<void> {
   await exec.exec(misePath, ['use', '-g', `erlang@${version}`]);
 }
 
+export async function installHex(): Promise<void> {
+  core.info('Installing Hex...');
+  await exec.exec('mix', ['local.hex', '--force']);
+}
+
+export async function installRebar3(): Promise<void> {
+  core.info('Installing rebar3...');
+  await exec.exec('mix', ['local.rebar', '--force']);
+}
+
+export async function configureHexMirror(mirror: string): Promise<void> {
+  if (!mirror) return;
+  core.exportVariable('HEX_MIRROR_URL', mirror.trim());
+  core.info(`Hex mirror: ${mirror.trim()}`);
+}
+
+async function readMiseTomlVersion(workingDir: string, toolName: string): Promise<string | null> {
+  const miseToml = path.join(workingDir, 'mise.toml');
+  try {
+    const content = await fs.promises.readFile(miseToml, 'utf-8');
+    const toolsMatch = content.match(/\[tools\]([\s\S]*?)(?:\n\[|$)/);
+    if (toolsMatch) {
+      const versionMatch = toolsMatch[1].match(
+        new RegExp(`^\\s*${toolName}\\s*=\\s*["']([^"']+)["']`, 'm')
+      );
+      if (versionMatch) return versionMatch[1];
+    }
+  } catch {}
+  return null;
+}
+
 export async function getElixirVersion(inputVersion: string, workingDir: string): Promise<string> {
   if (inputVersion) {
     return inputVersion;
@@ -160,6 +191,9 @@ export async function getElixirVersion(inputVersion: string, workingDir: string)
       return elixirLine.split(/\s+/)[1].trim();
     }
   } catch {}
+
+  const miseVersion = await readMiseTomlVersion(workingDir, 'elixir');
+  if (miseVersion) return miseVersion;
 
   const mixExs = path.join(workingDir, 'mix.exs');
   try {
@@ -186,6 +220,9 @@ export async function getErlangVersion(inputVersion: string, workingDir: string)
       return erlangLine.split(/\s+/)[1].trim();
     }
   } catch {}
+
+  const miseVersion = await readMiseTomlVersion(workingDir, 'erlang');
+  if (miseVersion) return miseVersion;
 
   return '27';
 }

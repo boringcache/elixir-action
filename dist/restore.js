@@ -47,6 +47,9 @@ async function run() {
         const cacheDeps = core.getInput('cache-deps') !== 'false';
         const cacheBuild = core.getInput('cache-build') !== 'false';
         const verbose = core.getInput('verbose') === 'true';
+        const installHexInput = core.getInput('install-hex') !== 'false';
+        const installRebarInput = core.getInput('install-rebar') !== 'false';
+        const hexpmMirrors = core.getInput('hexpm-mirrors') || '';
         const cliVersion = core.getInput('cli-version');
         const elixirVersion = await (0, utils_1.getElixirVersion)(inputElixirVersion, workingDir);
         const erlangVersion = await (0, utils_1.getErlangVersion)(inputErlangVersion, workingDir);
@@ -82,6 +85,15 @@ async function run() {
         else {
             await (0, utils_1.installErlang)(erlangVersion);
             await (0, utils_1.installElixir)(elixirVersion);
+        }
+        if (hexpmMirrors) {
+            await (0, utils_1.configureHexMirror)(hexpmMirrors);
+        }
+        if (installHexInput) {
+            await (0, utils_1.installHex)();
+        }
+        if (installRebarInput) {
+            await (0, utils_1.installRebar3)();
         }
         const depsTag = `${cacheTagPrefix}-elixir-deps`;
         const buildTag = `${cacheTagPrefix}-elixir-build-${elixirVersion}-otp-${erlangVersion}`;
