@@ -1,8 +1,6 @@
 # boringcache/elixir-action
 
-**Cache once. Reuse everywhere.**
-
-Setup Elixir + Erlang via mise and cache deps + build artifacts with BoringCache.
+Set up Elixir and Erlang via mise and cache deps plus build artifacts with BoringCache.
 
 ## Quick start
 
@@ -10,86 +8,46 @@ Setup Elixir + Erlang via mise and cache deps + build artifacts with BoringCache
 - uses: boringcache/elixir-action@v1
   with:
     workspace: my-org/my-project
-    elixir-version: '1.17'
-    erlang-version: '27'
+    elixir-version: "1.17"
+    erlang-version: "27"
   env:
-    BORINGCACHE_SAVE_TOKEN: ${{ secrets.BORINGCACHE_SAVE_TOKEN }}
+    BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+    BORINGCACHE_SAVE_TOKEN: ${{ github.event_name == 'pull_request' && '' || secrets.BORINGCACHE_SAVE_TOKEN }}
 
 - run: mix deps.get && mix compile
 ```
 
-## Recommended auth model
+## What it caches
 
-For new workflows, provide a restore token to every job and only provide a save token to trusted branch/tag jobs:
+- Elixir and Erlang from `.tool-versions`, `.elixir-version`, or `mix.exs`.
+- The Elixir/Erlang installation under mise.
+- `deps/`.
+- `_build/`.
 
-```yaml
-env:
-  BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
-  BORINGCACHE_SAVE_TOKEN: ${{ github.event_name == 'pull_request' && '' || secrets.BORINGCACHE_SAVE_TOKEN }}
-```
+## Key inputs
 
-On pull requests, the action restores caches and skips the post-save step when no save-capable token is configured.
-
-## How it works
-
-1. **Main step**: Installs Erlang/OTP and Elixir via mise (with cached installations), then restores `deps/` and `_build/` directories from BoringCache.
-2. **Build**: Run your mix commands as usual. Cached deps and compiled artifacts are already in place.
-3. **Post step**: Saves the mise installation, `deps/`, and `_build/` back to BoringCache.
-
-## Version detection
-
-Versions are auto-detected from project files:
-
-| Priority | Elixir source | Erlang source |
-|----------|--------------|--------------|
-| 1 | `elixir-version` input | `erlang-version` input |
-| 2 | `.elixir-version` file | `.tool-versions` file |
-| 3 | `.tool-versions` file | Fallback: `27` |
-| 4 | `mix.exs` (`elixir: "~> X.Y"`) | |
-| 5 | Fallback: `1.18` | |
-
-## What gets cached
-
-| Cache | Tag pattern | Description |
-|-------|-----------|-------------|
-| Runtime | `{prefix}-elixir-{version}-otp-{otp}` | Erlang + Elixir installation (mise data dir) |
-| Dependencies | `{prefix}-elixir-deps` | `deps/` directory (Hex packages) |
-| Build | `{prefix}-elixir-build-{version}-otp-{otp}` | `_build/` directory (compiled BEAM files) |
-
-The runtime cache is version-specific (Elixir + OTP combo). Dependencies are shared across versions. Build cache is version-specific since compiled BEAM files are tied to the OTP version.
-
-## Inputs
-
-| Input | Default | Description |
-|-------|---------|-------------|
-| `cli-version` | `v1.12.1` | BoringCache CLI version. Set to `skip` to disable automatic setup. |
-| `workspace` | | BoringCache workspace (e.g., `my-org/my-project`). |
-| `cache-tag` | repo name | Cache tag prefix. |
-| `elixir-version` | `1.18` | Elixir version. Auto-detected from `.tool-versions` or `mix.exs`. |
-| `erlang-version` | `27` | Erlang/OTP version. Auto-detected from `.tool-versions`. |
-| `working-directory` | `.` | Working directory for the project. |
-| `cache-elixir` | `true` | Cache Elixir + Erlang installation from mise. |
-| `cache-deps` | `true` | Cache Mix `deps/` directory. |
-| `cache-build` | `true` | Cache Mix `_build/` directory. |
-| `verbose` | `false` | Enable verbose CLI output. |
-| `exclude` | | Glob pattern to exclude files from cache digest. |
-| `save-always` | `false` | Save cache even if the job fails. |
+| Input | Description |
+|-------|-------------|
+| `workspace` | Workspace in `org/repo` form. |
+| `elixir-version` | Override the detected Elixir version. |
+| `erlang-version` | Override the detected Erlang version. |
+| `cache-elixir` | Cache the Elixir/Erlang installation from mise. |
+| `cache-deps` | Cache `deps/`. |
+| `cache-build` | Cache `_build/`. |
+| `working-directory` | Project directory to inspect. |
+| `save-always` | Save even if the job fails. |
 
 ## Outputs
 
 | Output | Description |
 |--------|-------------|
-| `workspace` | Resolved workspace name. |
 | `elixir-version` | Installed Elixir version. |
-| `erlang-version` | Installed Erlang/OTP version. |
-| `cache-tag` | Cache tag prefix used. |
+| `erlang-version` | Installed Erlang version. |
 | `cache-hit` | Whether any cache was restored. |
-| `elixir-cache-hit` | Whether the runtime installation cache was restored. |
+| `elixir-cache-hit` | Whether the runtime cache was restored. |
+| `workspace` | Resolved workspace name. |
 
-## Environment variables
+## Docs
 
-| Variable | Description |
-|----------|-------------|
-| `BORINGCACHE_RESTORE_TOKEN` | Restore-capable token for pull requests and other read-only jobs |
-| `BORINGCACHE_SAVE_TOKEN` | Save-capable token for trusted jobs that should publish cache updates |
-| `BORINGCACHE_DEFAULT_WORKSPACE` | Default workspace if not specified in inputs |
+- [Language actions docs](https://boringcache.com/docs#language-actions)
+- [GitHub Actions auth and trust model](https://boringcache.com/docs#actions-auth)
