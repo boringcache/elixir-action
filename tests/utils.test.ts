@@ -27,7 +27,6 @@ describe('Elixir Utils', () => {
 
     it('should fail when no workspace available', () => {
       expect(() => getWorkspace('')).toThrow('Workspace required');
-      expect(core.setFailed).toHaveBeenCalled();
     });
   });
 

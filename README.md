@@ -13,10 +13,22 @@ Setup Elixir + Erlang via mise and cache deps + build artifacts with BoringCache
     elixir-version: '1.17'
     erlang-version: '27'
   env:
-    BORINGCACHE_API_TOKEN: ${{ secrets.BORINGCACHE_API_TOKEN }}
+    BORINGCACHE_SAVE_TOKEN: ${{ secrets.BORINGCACHE_SAVE_TOKEN }}
 
 - run: mix deps.get && mix compile
 ```
+
+## Recommended auth model
+
+For new workflows, provide a restore token to every job and only provide a save token to trusted branch/tag jobs:
+
+```yaml
+env:
+  BORINGCACHE_RESTORE_TOKEN: ${{ secrets.BORINGCACHE_RESTORE_TOKEN }}
+  BORINGCACHE_SAVE_TOKEN: ${{ github.event_name == 'pull_request' && '' || secrets.BORINGCACHE_SAVE_TOKEN }}
+```
+
+On pull requests, the action restores caches and skips the post-save step when no save-capable token is configured.
 
 ## How it works
 
@@ -73,3 +85,11 @@ The runtime cache is version-specific (Elixir + OTP combo). Dependencies are sha
 | `cache-tag` | Cache tag prefix used. |
 | `cache-hit` | Whether any cache was restored. |
 | `elixir-cache-hit` | Whether the runtime installation cache was restored. |
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `BORINGCACHE_RESTORE_TOKEN` | Restore-capable token for pull requests and other read-only jobs |
+| `BORINGCACHE_SAVE_TOKEN` | Save-capable token for trusted jobs that should publish cache updates |
+| `BORINGCACHE_DEFAULT_WORKSPACE` | Default workspace if not specified in inputs |

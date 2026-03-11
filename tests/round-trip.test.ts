@@ -7,6 +7,8 @@ import * as os from 'os';
 jest.mock('@boringcache/action-core', () => ({
   ensureBoringCache: jest.fn().mockResolvedValue(undefined),
   execBoringCache: jest.fn().mockResolvedValue(0),
+  hasSaveToken: jest.fn(() => true),
+  missingSaveTokenMessage: jest.fn(() => 'A save-capable token is required. Set BORINGCACHE_SAVE_TOKEN or BORINGCACHE_API_TOKEN.'),
   getWorkspace: jest.fn((input: string) => {
     if (!input) throw new Error('Workspace required');
     if (!input.includes('/')) return `default/${input}`;
@@ -24,6 +26,7 @@ jest.mock('@boringcache/action-core', () => ({
 import {
   ensureBoringCache,
   execBoringCache,
+  hasSaveToken,
 } from '@boringcache/action-core';
 
 describe('Elixir restore/save round-trip', () => {
@@ -40,6 +43,7 @@ describe('Elixir restore/save round-trip', () => {
 
     (ensureBoringCache as jest.Mock).mockResolvedValue(undefined);
     (execBoringCache as jest.Mock).mockResolvedValue(0);
+    (hasSaveToken as jest.Mock).mockReturnValue(true);
 
     const { getWorkspace, getCacheTagPrefix } = require('@boringcache/action-core');
     (getWorkspace as jest.Mock).mockImplementation((input: string) => {
