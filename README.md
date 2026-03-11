@@ -1,6 +1,10 @@
 # boringcache/elixir-action
 
-Set up Elixir and Erlang via mise and cache deps plus build artifacts with BoringCache.
+Set up Elixir and Erlang, then cache deps plus build state.
+
+## When to use it
+
+Choose this for Mix projects that want runtime setup, `deps/`, and `_build/` handled together.
 
 ## Quick start
 
@@ -17,7 +21,13 @@ Set up Elixir and Erlang via mise and cache deps plus build artifacts with Borin
 - run: mix deps.get && mix compile
 ```
 
-## What it caches
+## Trust model
+
+- Restore works on pull requests with `BORINGCACHE_RESTORE_TOKEN`.
+- Save is skipped automatically when no save-capable token is configured.
+- Keep save tokens on trusted jobs only.
+
+## What it handles
 
 - Elixir and Erlang from `.tool-versions`, `.elixir-version`, or `mix.exs`.
 - The Elixir/Erlang installation under mise.
@@ -47,7 +57,7 @@ Set up Elixir and Erlang via mise and cache deps plus build artifacts with Borin
 | `elixir-cache-hit` | Whether the runtime cache was restored. |
 | `workspace` | Resolved workspace name. |
 
-## Docs
+## Learn more
 
 - [Language actions docs](https://boringcache.com/docs#language-actions)
 - [GitHub Actions auth and trust model](https://boringcache.com/docs#actions-auth)
